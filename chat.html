@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>KRISHNA.AI - Gita Chat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/png" href="assets/web1.png">
+</head>
+
+<body>
+    <nav class="nav-container">
+        <div class="nav-logo">
+            <img src="assets/web1.png" alt="Logo" />
+            <span>Krishna AI</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html" class="nav-link">Home</a></li>
+            <li><a href="chat.html" class="nav-link active">Gita</a></li>
+            <li><a href="#" onclick="alert('About page not implemented'); return false;">About</a></li>
+            <li><a href="#" onclick="alert('Contact page not implemented'); return false;">Contact</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <div class="chat-page-content">
+            <div id="chat-container">
+                <img src="assets/Chakra.png" alt="Rotating Icon" class="rotating-img" />
+                <div id="chatbox">
+                    <div class="message bot">Radhey Radhey 🙏 , Guru is listening...</div>
+                </div>
+                <div class="chat-input-container">
+                    <input type="text" id="userInput" placeholder="Ask something about Bhagavad Gita...">
+                    <button id="sendButton">Send</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="circle"></div>
+
+    <script>
+        // --- Mouse Follower Logic ---
+         const circleElement = document.querySelector('.circle');
+        if (circleElement) { // Check if element exists
+            const circles = [circleElement];
+            document.addEventListener('mousemove', (event) => {
+                const x = event.clientX;
+                const y = event.clientY;
+                circles.forEach((circle, index) => {
+                    if (circle) {
+                        setTimeout(() => {
+                             circle.style.left = `${x}px`;
+                             circle.style.top = `${y}px`;
+                             circle.style.transform = 'translate(-50%, -50%)';
+                        }, index * 30);
+                    }
+                });
+            });
+        } else {
+             console.error("Circle element not found for mouse follower.");
+        }
+
+
+        // --- Chat Logic ---
+        const userInputElement = document.getElementById('userInput');
+        const sendButton = document.getElementById('sendButton');
+        const chatbox = document.getElementById('chatbox');
+
+        // Make sure elements exist before adding listeners
+        if (userInputElement && sendButton && chatbox) {
+            // !! SECURITY WARNING !! DO NOT USE THIS IN PRODUCTION
+            // Replace with a secure backend solution to handle your API key.
+            // Replace with your OpenAI API key (do NOT commit real keys)
+            const API_KEY = 'YOUR_OPENAI_API_KEY';
+
+            const API_URL = 'https://api.openai.com/v1/chat/completions';
+            const MODEL_ID = 'ft:gpt-4o-mini-2024-07-18:personal::B204xqSk';
+
+            let messages = [
+                {
+                    role: 'system',
+                    content: 'You are an AI assistant knowledgeable in the Bhagavad Gita. Provide insightful responses using relevant verses and explanations. Make it more detailed. and length should be more than 500 words ',
+                },
+             ];
+
+             function displayMessage(text, className) {
+                 const messageDiv = document.createElement('div');
+                 messageDiv.classList.add('message', className);
+                 // Safely handle potential HTML in text - ideally, format on server or sanitize
+                 // For now, assuming formatGitaResponse provides safe subset or just text
+                 messageDiv.innerHTML = text;
+                 chatbox.appendChild(messageDiv);
+                 // Scroll to bottom
+                 chatbox.scrollTop = chatbox.scrollHeight;
+             }
+
+              function formatGitaResponse(response) {
+                 // Simple replica of the original formatting logic
+                 // Consider more robust HTML generation or sanitization if needed
+                 const parts = response.split(/(Meaning:|Explanation:|Guidance:)/g);
+                 const formattedSections = [];
+                 let currentHeader = null;
+
+                 for (let i = 0; i < parts.length; i++) {
+                     const part = parts[i].trim();
+                     if (['Meaning:', 'Explanation:', 'Guidance:'].includes(part)) {
+                         currentHeader = part.replace(':', '');
+                     } else if (part) {
+                          if (currentHeader) {
+                               // Basic HTML structure
+                              formattedSections.push(`<h4>${currentHeader}</h4><p>${part.replace(/\n/g, '<br>')}</p>`); // Add line breaks
+                              currentHeader = null;
+                          } else {
+                               // Treat as regular paragraph, add line breaks
+                              formattedSections.push(`<p>${part.replace(/\n/g, '<br>')}</p>`);
+                          }
+                     }
+                 }
+                  // Add the prefix only if there's content
+                  return formattedSections.length > 0 ? `📖 ${formattedSections.join('')}` : '📖 (No structured response)';
+             }
+
+
+             async function sendMessage() {
+                 const userMessage = userInputElement.value.trim();
+                 if (!userMessage) return;
+
+                 userInputElement.value = ''; // Clear input
+                 messages.push({ role: 'user', content: userMessage });
+                 // Display user message (plain text)
+                 const userMsgDiv = document.createElement('div');
+                 userMsgDiv.classList.add('message', 'user');
+                 userMsgDiv.textContent = 'You: ' + userMessage; // Use textContent for safety
+                 chatbox.appendChild(userMsgDiv);
+                 chatbox.scrollTop = chatbox.scrollHeight;
+
+
+                 // Add "typing..." indicator
+                 const typingIndicator = document.createElement('div');
+                 typingIndicator.classList.add('message', 'bot', 'typing');
+                 typingIndicator.innerHTML = 'Guru is thinking... 🤔';
+                 chatbox.appendChild(typingIndicator);
+                 chatbox.scrollTop = chatbox.scrollHeight;
+
+                 try {
+                     const response = await fetch(API_URL, {
+                         method: 'POST',
+                         headers: {
+                             'Content-Type': 'application/json',
+                             'Authorization': `Bearer ${API_KEY}`
+                         },
+                         body: JSON.stringify({
+                             model: MODEL_ID,
+                             messages: messages
+                         })
+                     });
+
+                     // Remove typing indicator
+                     if (chatbox.contains(typingIndicator)) {
+                         chatbox.removeChild(typingIndicator);
+                     }
+
+                     if (!response.ok) {
+                         const errorData = await response.json().catch(() => ({ error: { message: 'Failed to parse error response' } }));
+                         throw new Error(`API Error (${response.status}): ${errorData.error?.message || 'Unknown error'}`);
+                     }
+
+                     const data = await response.json();
+                     const botMessageContent = data.choices?.[0]?.message?.content?.trim() || 'Sorry, I couldn’t understand.';
+
+                     messages.push({ role: 'assistant', content: botMessageContent });
+                     const formattedBotMessage = formatGitaResponse(botMessageContent);
+                     displayMessage('Guru : ' + formattedBotMessage, 'bot'); // displayMessage handles HTML formatting
+
+                 } catch (error) {
+                     // Remove typing indicator on error too
+                     if (chatbox.contains(typingIndicator)) {
+                         chatbox.removeChild(typingIndicator);
+                     }
+                     console.error('API error:', error);
+                      // Display error message (plain text)
+                      const errorMsgDiv = document.createElement('div');
+                      errorMsgDiv.classList.add('message', 'bot', 'error');
+                      errorMsgDiv.textContent = 'Guru: Something went wrong. Please try again. (' + error.message + ')'; // Use textContent
+                      chatbox.appendChild(errorMsgDiv);
+                      chatbox.scrollTop = chatbox.scrollHeight;
+                 }
+             }
+
+             // Event Listeners
+             sendButton.addEventListener('click', sendMessage);
+             userInputElement.addEventListener('keypress', (event) => {
+                 if (event.key === 'Enter') {
+                     sendMessage();
+                 }
+             });
+        } else {
+            console.error("Chat UI elements (userInput, sendButton, or chatbox) not found.");
+        }
+
+    </script>
+
+</body>
+</html>

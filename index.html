@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>KRISHNA.AI - Home</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/png" href="assets/web1.png">
+</head>
+
+<body>
+    <nav class="nav-container">
+        <div class="nav-logo">
+            <img src="assets/web1.png" alt="Logo" />
+            <span>Krishna AI</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html" class="nav-link active">Home</a></li>
+            <li><a href="chat.html" class="nav-link">Gita</a></li>
+            <li><a href="#" onclick="alert('About page not implemented'); return false;">About</a></li>
+            <li><a href="#" onclick="alert('Contact page not implemented'); return false;">Contact</a></li>
+        </ul>
+    </nav>
+
+     <main>
+        <div class="home-page-content">
+            <section class="landing-hero">
+                <div class="welcome-content">
+                    <img src="assets/Chakra.png" alt="Krishna playing flute" class="krishna-img" />
+                    <h1 class="welcome-title my-font">Welcome to Krishna AI</h1>
+                    <p class="welcome-para">
+                        Dive deep into the eternal wisdom of the Bhagavad Gita. Let the divine words of Lord Krishna
+                        guide your path, inspire your heart, and awaken your inner consciousness. Ask, learn, and
+                        grow through the teachings that transcend time and space. 🕉️🕊️
+                    </p>
+                    <div class="start-button-container">
+                        <a href="chat.html" class="start-chat-btn my-font">Start Conversation with Gita</a>
+                    </div>
+                </div>
+            </section>
+        </div>
+     </main>
+
+    <div class="circle"></div>
+
+    <script>
+        // --- Mouse Follower Logic ---
+        const circleElement = document.querySelector('.circle');
+        if (circleElement) { // Check if element exists
+            const circles = [circleElement];
+            document.addEventListener('mousemove', (event) => {
+                const x = event.clientX;
+                const y = event.clientY;
+                circles.forEach((circle, index) => {
+                    if (circle) {
+                        setTimeout(() => {
+                            // Ensure style properties are set correctly
+                            circle.style.left = `${x}px`;
+                            circle.style.top = `${y}px`;
+                            // Make sure transform is applied if needed, e.g., for centering
+                            circle.style.transform = 'translate(-50%, -50%)';
+                        }, index * 30);
+                    }
+                });
+            });
+        } else {
+             console.error("Circle element not found for mouse follower.");
+        }
+    </script>
+
+</body>
+</html>
